@@ -9,7 +9,7 @@ import java.util.List;
 public class User {
 
     @Id
-    private Long id;
+    private String id;
     private String userName;
     private String password;
     private String firstName;
@@ -20,7 +20,8 @@ public class User {
     public User() {
     }
 
-    public User(String userName, String password, String firstName, String lastName, String email, List<Todo> todoList) {
+    public User(String id, String userName, String password, String firstName, String lastName, String email, List<Todo> todoList) {
+        this.id = id;
         this.userName = userName;
         this.password = password;
         this.firstName = firstName;
@@ -29,8 +30,12 @@ public class User {
         this.todoList = todoList;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getUserName() {
@@ -84,7 +89,7 @@ public class User {
     @Override
     public String toString() {
         return "User{" +
-                "id=" + id +
+                "id='" + id + '\'' +
                 ", userName='" + userName + '\'' +
                 ", password='" + password + '\'' +
                 ", firstName='" + firstName + '\'' +

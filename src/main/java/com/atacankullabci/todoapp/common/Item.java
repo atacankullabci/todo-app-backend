@@ -12,8 +12,8 @@ import java.util.Date;
 public class Item {
 
     @Id
-    private Long id;
-    private Long todoRefId;
+    private String id;
+    private String todoRefId;
     private String name;
     private String description;
     private Date deadline;
@@ -23,7 +23,7 @@ public class Item {
     public Item() {
     }
 
-    public Item(Long id, Long todoRefId, String name, String description, Date deadline, EnumItemStatus status, EnumItemDependency dependency) {
+    public Item(String id, String todoRefId, String name, String description, Date deadline, EnumItemStatus status, EnumItemDependency dependency) {
         this.id = id;
         this.todoRefId = todoRefId;
         this.name = name;
@@ -33,19 +33,19 @@ public class Item {
         this.dependency = dependency;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getTodoRefId() {
+    public String getTodoRefId() {
         return todoRefId;
     }
 
-    public void setTodoRefId(Long todoRefId) {
+    public void setTodoRefId(String todoRefId) {
         this.todoRefId = todoRefId;
     }
 
@@ -92,8 +92,8 @@ public class Item {
     @Override
     public String toString() {
         return "Item{" +
-                "id=" + id +
-                ", todoRefId=" + todoRefId +
+                "id='" + id + '\'' +
+                ", todoRefId='" + todoRefId + '\'' +
                 ", name='" + name + '\'' +
                 ", description='" + description + '\'' +
                 ", deadline=" + deadline +

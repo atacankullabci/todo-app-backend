@@ -9,7 +9,7 @@ import java.util.List;
 public class Todo {
 
     @Id
-    private Long id;
+    private String id;
     private String todoName;
     private List<Item> itemList;
     private User user;
@@ -17,14 +17,19 @@ public class Todo {
     public Todo() {
     }
 
-    public Todo(String todoName, List<Item> itemList, User user) {
+    public Todo(String id, String todoName, List<Item> itemList, User user) {
+        this.id = id;
         this.todoName = todoName;
         this.itemList = itemList;
         this.user = user;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getTodoName() {
@@ -54,7 +59,7 @@ public class Todo {
     @Override
     public String toString() {
         return "Todo{" +
-                "id=" + id +
+                "id='" + id + '\'' +
                 ", todoName='" + todoName + '\'' +
                 ", itemList=" + itemList +
                 ", user=" + user +
