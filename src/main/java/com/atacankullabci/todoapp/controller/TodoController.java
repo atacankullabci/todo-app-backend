@@ -1,7 +1,6 @@
 package com.atacankullabci.todoapp.controller;
 
 import com.atacankullabci.todoapp.common.Todo;
-import com.atacankullabci.todoapp.repository.ItemRepository;
 import com.atacankullabci.todoapp.repository.TodoRepository;
 import com.atacankullabci.todoapp.service.TodoService;
 import org.springframework.http.HttpStatus;
@@ -30,14 +29,13 @@ public class TodoController {
     }
 
     @GetMapping("/todos/{id}")
-    public ResponseEntity<Todo> getTodoById(@PathVariable("id") Long id) {
+    public ResponseEntity<Todo> getTodoById(@PathVariable("id") String id) {
         Todo todo = todoRepository.getTodoById(id);
         return ResponseEntity.ok().body(todo);
     }
 
     @PutMapping("/todos/{id}")
-    public ResponseEntity<Todo> updateTodo(@RequestBody Todo todo, @PathVariable(name = "id") Long id) throws URISyntaxException {
-
+    public ResponseEntity<Todo> updateTodo(@RequestBody Todo todo, @PathVariable(name = "id") String id) throws URISyntaxException {
         Todo currentTodo = todoRepository.getTodoById(id);
 
         if (currentTodo == null) {
@@ -58,7 +56,7 @@ public class TodoController {
     }
 
     @DeleteMapping("/todos/{id}")
-    public ResponseEntity<Void> deleteTodo(@PathVariable(name = "id") Long id) {
+    public ResponseEntity<Void> deleteTodo(@PathVariable(name = "id") String id) {
         todoRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }
