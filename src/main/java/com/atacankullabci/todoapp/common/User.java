@@ -1,5 +1,6 @@
 package com.atacankullabci.todoapp.common;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -11,16 +12,18 @@ public class User {
     @Id
     private String id;
     private String userName;
+    @JsonIgnore
     private String password;
     private String firstName;
     private String lastName;
     private String email;
     private List<Todo> todoList;
+    private Boolean enabled; // Controls whether the user has activated the account or not
 
     public User() {
     }
 
-    public User(String id, String userName, String password, String firstName, String lastName, String email, List<Todo> todoList) {
+    public User(String id, String userName, String password, String firstName, String lastName, String email, List<Todo> todoList, Boolean enabled) {
         this.id = id;
         this.userName = userName;
         this.password = password;
@@ -28,6 +31,7 @@ public class User {
         this.lastName = lastName;
         this.email = email;
         this.todoList = todoList;
+        this.enabled = enabled;
     }
 
     public String getId() {
@@ -86,6 +90,14 @@ public class User {
         this.todoList = todoList;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -96,6 +108,7 @@ public class User {
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
                 ", todoList=" + todoList +
+                ", enabled=" + enabled +
                 '}';
     }
 }
