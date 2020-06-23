@@ -4,7 +4,6 @@ import com.atacankullabci.todoapp.config.JwtUtil;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.service.AuthService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.web.bind.annotation.*;
@@ -33,17 +32,17 @@ public class AuthController {
         } else {
             throw new CustomException("Bad request");
         }
-        return new ResponseEntity<>("User has been registered", HttpStatus.OK);
+        return ResponseEntity.ok("User has been registered");
     }
 
     @GetMapping("/account-verification/{activationToken}")
-    public ResponseEntity<Void> activateUser(@PathVariable(name = "activationToken") String activationToken) throws CustomException {
+    public ResponseEntity<String> activateUser(@PathVariable(name = "activationToken") String activationToken) throws CustomException {
         if (activationToken != null) {
             authService.activateUser(activationToken);
         } else {
             throw new CustomException("Your activation token is either revoked or incorrect");
         }
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok("Account has been activated");
     }
 
 }

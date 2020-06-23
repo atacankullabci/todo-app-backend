@@ -9,6 +9,7 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,7 +23,8 @@ public class MailService {
         this.javaMailSender = javaMailSender;
     }
 
-    public void sendSimpleMessage(NotificationMail notificationMail) {
+    @Async
+    public void sendActivationMail(NotificationMail notificationMail) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(((JavaMailSenderImpl) javaMailSender).getUsername());
         message.setTo(notificationMail.getRecipient());

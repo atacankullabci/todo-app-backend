@@ -4,6 +4,7 @@ import com.atacankullabci.todoapp.common.NotificationMail;
 import com.atacankullabci.todoapp.common.User;
 import com.atacankullabci.todoapp.common.VerificationToken;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
+import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.repository.UserRepository;
 import com.atacankullabci.todoapp.repository.VerificationTokenRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -49,12 +51,15 @@ public class AuthService {
                 "Thank you for signing up to Quick-Do, please click on the link below to activate your account" +
                         "\nhttp:localhost:8080/api/auth/account-verification/" + token);
 
-        mailService.sendSimpleMessage(notificationMail);
+        mailService.sendActivationMail(notificationMail);
     }
 
-    public void activateUser(String activationToken) {
-        VerificationToken verificationToken = verificationTokenRepository.findByToken(activationToken);
-        User activationUser = verificationToken.getUser();
+    @Transactional
+    public void activateUser(String activationToken) throws CustomException {
+        Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(activationToken);
+        verificationToken.orElseThrow(() -> new CustomException("Invalid token"));
+
+        User activationUser = verificationToken.get().getUser();
         activationUser.setEnabled(true);
 
         userRepository.save(activationUser);
