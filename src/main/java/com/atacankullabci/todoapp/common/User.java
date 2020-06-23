@@ -18,7 +18,7 @@ public class User {
     private String lastName;
     private String email;
     private List<Todo> todoList;
-    private Boolean enabled; // Controls whether the user has activated the account or not
+    private Boolean enabled = false; // Controls whether the user has activated the account or not
 
     public User() {
     }
