@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") String id) {
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

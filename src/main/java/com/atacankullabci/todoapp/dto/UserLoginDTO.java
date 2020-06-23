@@ -17,13 +17,21 @@ public class UserLoginDTO {
     @Email
     private String email;
 
+    @NotNull
+    private String firstName;
+
+    @NotNull
+    private String lastName;
+
     public UserLoginDTO() {
     }
 
-    public UserLoginDTO(@NotNull @Size(min = 1, max = 50) String username, @NotNull @Size(min = 4, max = 100) String password, @Email String email) {
+    public UserLoginDTO(@NotNull @Size(min = 1, max = 50) String username, @NotNull @Size(min = 4, max = 100) String password, @Email String email, @NotNull String firstName, @NotNull String lastName) {
         this.username = username;
         this.password = password;
         this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
     }
 
     public String getUsername() {
@@ -50,12 +58,30 @@ public class UserLoginDTO {
         this.email = email;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     @Override
     public String toString() {
         return "UserLoginDTO{" +
                 "username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
                 '}';
     }
 }

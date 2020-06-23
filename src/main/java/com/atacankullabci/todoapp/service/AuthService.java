@@ -1,5 +1,6 @@
 package com.atacankullabci.todoapp.service;
 
+import com.atacankullabci.todoapp.common.NotificationMail;
 import com.atacankullabci.todoapp.common.User;
 import com.atacankullabci.todoapp.common.VerificationToken;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
@@ -20,17 +21,21 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final MailService mailService;
 
-    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, VerificationTokenRepository verificationTokenRepository) {
+    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, MailService mailService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
+        this.mailService = mailService;
     }
 
     @Transactional
     public void signUpUser(UserLoginDTO userLoginDTO) {
         User user = new User();
         user.setUserName(userLoginDTO.getUsername());
+        user.setFirstName(userLoginDTO.getFirstName());
+        user.setLastName(userLoginDTO.getLastName());
         user.setPassword(passwordEncoder.encode(userLoginDTO.getPassword()));
         user.setEmail(userLoginDTO.getEmail());
         user.setTodoList(new ArrayList<>());
@@ -38,6 +43,21 @@ public class AuthService {
         userRepository.save(user);
 
         String token = getGenerateVerificationToken(user);
+
+        NotificationMail notificationMail = new NotificationMail("Please Activate Your Account",
+                user.getEmail(),
+                "Thank you for signing up to Quick-Do, please click on the link below to activate your account" +
+                        "\nhttp:localhost:8080/api/auth/account-verification/" + token);
+
+        mailService.sendSimpleMessage(notificationMail);
+    }
+
+    public void activateUser(String activationToken) {
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(activationToken);
+        User activationUser = verificationToken.getUser();
+        activationUser.setEnabled(true);
+
+        userRepository.save(activationUser);
     }
 
     private String getGenerateVerificationToken(User user) {
