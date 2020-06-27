@@ -3,10 +3,17 @@ package com.atacankullabci.todoapp.service;
 import com.atacankullabci.todoapp.common.NotificationMail;
 import com.atacankullabci.todoapp.common.User;
 import com.atacankullabci.todoapp.common.VerificationToken;
+import com.atacankullabci.todoapp.dto.AuthenticationResponseDTO;
+import com.atacankullabci.todoapp.dto.LoginRequestDTO;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.repository.UserRepository;
 import com.atacankullabci.todoapp.repository.VerificationTokenRepository;
+import com.atacankullabci.todoapp.security.JwtProvider;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,16 +31,20 @@ public class AuthService {
     private final UserRepository userRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final MailService mailService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtProvider jwtProvider;
 
-    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, MailService mailService) {
+    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, MailService mailService, AuthenticationManager authenticationManager, JwtProvider jwtProvider) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.mailService = mailService;
+        this.authenticationManager = authenticationManager;
+        this.jwtProvider = jwtProvider;
     }
 
     @Transactional
-    public void signUpUser(UserLoginDTO userLoginDTO) {
+    public void signupUser(UserLoginDTO userLoginDTO) {
         User user = new User();
         user.setUserName(userLoginDTO.getUsername());
         user.setFirstName(userLoginDTO.getFirstName());
@@ -56,6 +67,7 @@ public class AuthService {
 
     @Transactional
     public void activateUser(String activationToken) throws CustomException {
+        // control the token whether it is expired or not
         Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(activationToken);
         verificationToken.orElseThrow(() -> new CustomException("Invalid token"));
 
@@ -75,5 +87,17 @@ public class AuthService {
         verificationTokenRepository.save(verificationToken);
 
         return token;
+    }
+
+    public AuthenticationResponseDTO loginUser(LoginRequestDTO loginRequestDTO) {
+        // Spring calls UserDetailServiceImpl.loadUserByUsername
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(),
+                passwordEncoder.encode(loginRequestDTO.getPassword())));
+
+        // Check user is logged in or not
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        String token = jwtProvider.generateToken(authentication);
+        return new AuthenticationResponseDTO(token, loginRequestDTO.getUsername());
     }
 }

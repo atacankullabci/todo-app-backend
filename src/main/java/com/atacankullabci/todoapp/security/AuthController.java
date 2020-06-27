@@ -1,6 +1,8 @@
 package com.atacankullabci.todoapp.security;
 
 import com.atacankullabci.todoapp.config.JwtUtil;
+import com.atacankullabci.todoapp.dto.AuthenticationResponseDTO;
+import com.atacankullabci.todoapp.dto.LoginRequestDTO;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.service.AuthService;
@@ -28,7 +30,7 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ResponseEntity<String> signUp(@RequestBody UserLoginDTO userLoginDTO) throws CustomException {
         if (userLoginDTO != null) {
-            authService.signUpUser(userLoginDTO);
+            authService.signupUser(userLoginDTO);
         } else {
             throw new CustomException("Bad request");
         }
@@ -45,4 +47,8 @@ public class AuthController {
         return ResponseEntity.ok("Account has been activated");
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
+        return ResponseEntity.ok().body(authService.loginUser(loginRequestDTO));
+    }
 }
