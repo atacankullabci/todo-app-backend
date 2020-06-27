@@ -1,6 +1,7 @@
 package com.atacankullabci.todoapp.security;
 
-import com.atacankullabci.todoapp.config.JwtUtil;
+import com.atacankullabci.todoapp.dto.AuthenticationResponseDTO;
+import com.atacankullabci.todoapp.dto.LoginRequestDTO;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.service.AuthService;
@@ -13,14 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin("http://localhost:4200")
 public class AuthController {
 
-    private final JwtUtil jwtUtil;
-
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     private final AuthService authService;
 
-    public AuthController(JwtUtil jwtUtil, AuthenticationManagerBuilder authenticationManagerBuilder, AuthService authService) {
-        this.jwtUtil = jwtUtil;
+    public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder, AuthService authService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.authService = authService;
     }
@@ -28,7 +26,7 @@ public class AuthController {
     @PostMapping("/sign-up")
     public ResponseEntity<String> signUp(@RequestBody UserLoginDTO userLoginDTO) throws CustomException {
         if (userLoginDTO != null) {
-            authService.signUpUser(userLoginDTO);
+            authService.signupUser(userLoginDTO);
         } else {
             throw new CustomException("Bad request");
         }
@@ -45,4 +43,15 @@ public class AuthController {
         return ResponseEntity.ok("Account has been activated");
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
+
+        return ResponseEntity.ok().body(authService.loginUser(loginRequestDTO));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody LoginRequestDTO loginRequestDTO) {
+        authService.logout(loginRequestDTO);
+        return ResponseEntity.ok().build();
+    }
 }

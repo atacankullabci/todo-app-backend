@@ -24,7 +24,7 @@ public class UserController {
 
     @GetMapping("/users/{userName}")
     public ResponseEntity<User> getUserByUsername(@PathVariable(name = "userName") String userName) {
-        return ResponseEntity.ok().body(userRepository.getUserByUserName(userName));
+        return ResponseEntity.ok().body(userRepository.findByUserName(userName).get());
     }
 
     @PostMapping("/users")

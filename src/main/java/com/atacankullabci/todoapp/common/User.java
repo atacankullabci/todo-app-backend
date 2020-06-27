@@ -34,6 +34,10 @@ public class User {
         this.enabled = enabled;
     }
 
+    public String getFullName() {
+        return this.getFirstName() + " " + this.getLastName();
+    }
+
     public String getId() {
         return id;
     }
