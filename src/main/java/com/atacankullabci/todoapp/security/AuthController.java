@@ -44,8 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) {
-
+    public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) throws CustomException {
         return ResponseEntity.ok().body(authService.loginUser(loginRequestDTO));
     }
 

@@ -11,8 +11,8 @@ import com.atacankullabci.todoapp.repository.UserRepository;
 import com.atacankullabci.todoapp.repository.VerificationTokenRepository;
 import com.atacankullabci.todoapp.security.JwtProvider;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,16 +33,19 @@ public class AuthService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final MailService mailService;
     private final AuthenticationManager authenticationManager;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtProvider jwtProvider;
 
-    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, MailService mailService, AuthenticationManager authenticationManager, AuthenticationManagerBuilder authenticationManagerBuilder, JwtProvider jwtProvider) {
+    public AuthService(PasswordEncoder passwordEncoder,
+                       UserRepository userRepository,
+                       VerificationTokenRepository verificationTokenRepository,
+                       MailService mailService,
+                       AuthenticationManager authenticationManager,
+                       JwtProvider jwtProvider) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.mailService = mailService;
         this.authenticationManager = authenticationManager;
-        this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.jwtProvider = jwtProvider;
     }
 
@@ -92,11 +95,15 @@ public class AuthService {
         return token;
     }
 
-    public AuthenticationResponseDTO loginUser(LoginRequestDTO loginRequestDTO) {
-        UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword());
-        // Spring calls UserDetailServiceImpl.loadUserByUsername
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+    public AuthenticationResponseDTO loginUser(LoginRequestDTO loginRequestDTO) throws CustomException {
+        Authentication authentication = null;
+        try {
+            // Spring calls UserDetailServiceImpl.loadUserByUsername
+            authentication = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword()));
+        } catch (DisabledException e) {
+            throw new CustomException("The user have not been validated the token in the send email");
+        }
 
         // Authentication context has been set
         SecurityContextHolder.getContext().setAuthentication(authentication);

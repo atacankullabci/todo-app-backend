@@ -25,6 +25,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
         Optional<User> user = userRepository.findByUserName(username);
 
+        // users enabled property should be true when authorizing the user. otherwise spring throws exception
         return new org.springframework.security.core.userdetails.User(user.get().getUserName(),
                 user.get().getPassword(),
                 user.get().getEnabled(),
