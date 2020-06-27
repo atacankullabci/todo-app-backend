@@ -39,12 +39,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         // All request which are starting with /api/auth are going to pass to backend
         // The remainding end points are need to be authenticated
-        http.csrf().disable()
+        http.cors().and().csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/api/auth/**")
-                .permitAll()
-                .anyRequest()
-                .authenticated();
+                .antMatchers("/api/auth/**").permitAll()
+                .anyRequest().authenticated()
+                .antMatchers("/api/**").authenticated()
+                .and().httpBasic();
     }
 
     @Autowired

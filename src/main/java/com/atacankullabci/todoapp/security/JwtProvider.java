@@ -1,26 +1,26 @@
 package com.atacankullabci.todoapp.security;
 
-import com.atacankullabci.todoapp.exceptions.CustomException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.PrivateKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 import java.util.Date;
+
+import static io.jsonwebtoken.security.Keys.hmacShaKeyFor;
 
 @Service
 public class JwtProvider {
 
     // generate keystore : keytool -genkey -v -keystore todo.jks -alias com.atacankullabci.todo -keyalg RSA -keysize 2048
 
-    private KeyStore keyStore;
+    /*private KeyStore keyStore;
 
     @Value("${keystore.password}")
     private String keyStorePass;
@@ -38,6 +38,7 @@ public class JwtProvider {
     }
 
     public String generateToken(Authentication authentication) {
+    //import org.springframework.security.core.userdetails.User;
         User principal = (User) authentication.getPrincipal();
         return Jwts
                 .builder()
@@ -62,40 +63,42 @@ public class JwtProvider {
         return null;
     }
     
- /*   public static String createJWT(User user) {
+ */
 
-        SecretKey key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
-        byte[] secret = Base64.getDecoder().decode(key.toString());
+    @Value("${jwt.signature}")
+    private String jwtSecret;
 
-        System.out.println(key.toString());
+    public String generateToken(Authentication authentication) {
+
+        User principal = (User) authentication.getPrincipal();
+
+        byte[] secret = Base64.getDecoder().decode(jwtSecret);
 
         Instant expireIn = Instant.now().plus(5, ChronoUnit.MINUTES); // Expire in 5 min
 
         String jwt = Jwts.builder()
-                .setSubject(user.getFullName())
+                .setSubject(principal.getUsername())
                 .setAudience("todo-app")
-                .claim("Role", "admin")
-                .claim("Departmen", "CS")
+                //.claim("Role", "admin")
+                //.claim("Departmen", "CS")
                 //.claim("rnd-clm", new Random().nextInt(20) + 1)
                 .setIssuedAt(Date.from(Instant.now()))
                 .setExpiration(Date.from(expireIn))
-                .signWith(Keys.hmacShaKeyFor(secret))
+                .signWith(hmacShaKeyFor(secret))
                 .compact();
         return jwt;
     }
 
-    public static void decodeJwt(String jwt) {
-        byte[] secret = Base64.getDecoder().decode("w7zONawSOaRrgORvqPnKuo+u+U38KgN3gwYQxd6UTcE=");
+    public void decodeJwt(String jwt) {
+        byte[] secret = Base64.getDecoder().decode(jwtSecret);
 
         Jws<Claims> claims = Jwts.parserBuilder()
-                .setSigningKey(Keys.hmacShaKeyFor(secret))
+                .setSigningKey(hmacShaKeyFor(secret))
                 .build()
                 .parseClaimsJws(jwt);
 
         System.out.println(claims);
     }
-
-  */
 }
 
 
