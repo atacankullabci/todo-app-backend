@@ -9,9 +9,8 @@ import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.repository.UserRepository;
 import com.atacankullabci.todoapp.repository.VerificationTokenRepository;
-import com.atacankullabci.todoapp.security.JwtProvider;
+import com.atacankullabci.todoapp.security.jwt.JwtProvider;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -75,7 +74,9 @@ public class AuthService {
     public void activateUser(String activationToken) throws CustomException {
         // control the token whether it is expired or not
         Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(activationToken);
-        verificationToken.orElseThrow(() -> new CustomException("Invalid token"));
+        if (Instant.now().plus(1, ChronoUnit.DAYS).compareTo(verificationToken.get().getExpirationDate()) < 0) {
+            throw new CustomException("Invalid token");
+        }
 
         User activationUser = verificationToken.get().getUser();
         activationUser.setEnabled(true);
@@ -96,15 +97,9 @@ public class AuthService {
     }
 
     public AuthenticationResponseDTO loginUser(LoginRequestDTO loginRequestDTO) throws CustomException {
-        Authentication authentication = null;
-        try {
-            // Spring calls UserDetailServiceImpl.loadUserByUsername
-            authentication = authenticationManager
-                    .authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword()));
-        } catch (DisabledException e) {
-            throw new CustomException("The user have not been validated the token in the send email");
-        }
-
+        // Spring calls UserDetailServiceImpl.loadUserByUsername
+        Authentication authentication = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword()));
         // Authentication context has been set
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

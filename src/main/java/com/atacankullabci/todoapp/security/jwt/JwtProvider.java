@@ -1,9 +1,13 @@
-package com.atacankullabci.todoapp.security;
+package com.atacankullabci.todoapp.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
@@ -17,6 +21,8 @@ import static io.jsonwebtoken.security.Keys.hmacShaKeyFor;
 
 @Service
 public class JwtProvider {
+
+    private final Logger log = LoggerFactory.getLogger(JwtProvider.class);
 
     // generate keystore : keytool -genkey -v -keystore todo.jks -alias com.atacankullabci.todo -keyalg RSA -keysize 2048
 
@@ -89,15 +95,30 @@ public class JwtProvider {
         return jwt;
     }
 
-    public void decodeJwt(String jwt) {
+    public Authentication getAuthentication(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(jwtSecret)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return new UsernamePasswordAuthenticationToken(claims.getSubject(), token);
+    }
+
+    public boolean decodeJwt(String jwt) {
         byte[] secret = Base64.getDecoder().decode(jwtSecret);
 
-        Jws<Claims> claims = Jwts.parserBuilder()
-                .setSigningKey(hmacShaKeyFor(secret))
-                .build()
-                .parseClaimsJws(jwt);
-
-        System.out.println(claims);
+        try {
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(hmacShaKeyFor(secret))
+                    .build()
+                    .parseClaimsJws(jwt);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.info("Invalid JWT token.");
+            log.trace("Invalid JWT token trace.", e);
+        }
+        return false;
     }
 }
 
