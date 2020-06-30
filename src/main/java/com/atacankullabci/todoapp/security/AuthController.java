@@ -6,6 +6,7 @@ import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.service.AuthService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<String> signUp(@RequestBody UserLoginDTO userLoginDTO) throws CustomException {
+        // compare new coming obj to db to check whether the same obj is trying to add twice
         if (userLoginDTO != null) {
             authService.signupUser(userLoginDTO);
         } else {
@@ -45,7 +47,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) throws CustomException {
-        return ResponseEntity.ok().body(authService.loginUser(loginRequestDTO));
+        AuthenticationResponseDTO authenticationResponseDTO = null;
+        try {
+            authenticationResponseDTO = authService.loginUser(loginRequestDTO);
+        } catch (DisabledException e) {
+            throw new CustomException("The user have not been activated");
+        }
+
+        return ResponseEntity.ok().body(authenticationResponseDTO);
     }
 
     @PostMapping("/logout")

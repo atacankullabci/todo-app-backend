@@ -36,7 +36,7 @@ public class MailService {
             javaMailSender.send(message);
             log.info("Activation mail send to user {}", notificationMail.getRecipient());
         } catch (MailException err) {
-            new CustomException("An error occured while sending the email.");
+            new CustomException("An error occurred while sending the email.");
         }
     }
 }

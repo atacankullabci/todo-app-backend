@@ -1,5 +1,7 @@
 package com.atacankullabci.todoapp.config;
 
+import com.atacankullabci.todoapp.security.jwt.JwtConfigurer;
+import com.atacankullabci.todoapp.security.jwt.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +12,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,9 +22,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final UserDetailsService userDetailsService;
+    private final JwtProvider jwtProvider;
 
-    public SecurityConfiguration(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService) {
+    public SecurityConfiguration(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService, JwtProvider jwtProvider) {
         this.userDetailsService = userDetailsService;
+        this.jwtProvider = jwtProvider;
     }
 
     @Bean
@@ -35,7 +40,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         return super.authenticationManager();
     }
 
-    @Override
+    /*@Override
     protected void configure(HttpSecurity http) throws Exception {
         // All request which are starting with /api/auth are going to pass to backend
         // The remaining end points are need to be authenticated
@@ -44,11 +49,32 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated()
                 .and().httpBasic();
+    }*/
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        //@formatter:off
+        http
+                .httpBasic().disable()
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authorizeRequests()
+                .antMatchers("/api/auth/**").permitAll()
+                .anyRequest().authenticated()
+                .and().httpBasic()
+                .and()
+                .apply(getCustomJwtConfigurer());
+        //@formatter:on
     }
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
         authenticationManagerBuilder.userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder());
+    }
+
+    private JwtConfigurer getCustomJwtConfigurer() {
+        return new JwtConfigurer(jwtProvider, userDetailsService);
     }
 }
