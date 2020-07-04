@@ -10,8 +10,8 @@ import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.repository.UserRepository;
 import com.atacankullabci.todoapp.repository.VerificationTokenRepository;
 import com.atacankullabci.todoapp.security.jwt.JwtProvider;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,20 +31,19 @@ public class AuthService {
     private final UserRepository userRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final MailService mailService;
-    private final AuthenticationManager authenticationManager;
+    private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtProvider jwtProvider;
 
     public AuthService(PasswordEncoder passwordEncoder,
                        UserRepository userRepository,
                        VerificationTokenRepository verificationTokenRepository,
                        MailService mailService,
-                       AuthenticationManager authenticationManager,
-                       JwtProvider jwtProvider) {
+                       AuthenticationManagerBuilder authenticationManagerBuilder, JwtProvider jwtProvider) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.mailService = mailService;
-        this.authenticationManager = authenticationManager;
+        this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.jwtProvider = jwtProvider;
     }
 
@@ -97,17 +96,18 @@ public class AuthService {
     }
 
     public AuthenticationResponseDTO loginUser(LoginRequestDTO loginRequestDTO) throws CustomException {
+
+        UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword());
+
         // Spring calls UserDetailServiceImpl.loadUserByUsername
-        Authentication authentication = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword()));
-        // Authentication context has been set
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        String token = jwtProvider.generateToken(authentication);
-        return new AuthenticationResponseDTO(token, loginRequestDTO.getUsername());
+        String jwt = jwtProvider.generateToken(authentication);
+        return new AuthenticationResponseDTO(jwt, loginRequestDTO.getUsername());
     }
 
-    public void logout(LoginRequestDTO loginRequestDTO) {
-        SecurityContextHolder.clearContext();
-    }
+    //public void logout(LoginRequestDTO loginRequestDTO) {
+    //  SecurityContextHolder.clearContext();
+    // }
 }

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
@@ -85,7 +86,7 @@ public class JwtProvider {
         String jwt = Jwts.builder()
                 .setSubject(principal.getUsername())
                 .setAudience("todo-app")
-                //.claim("Role", "admin")
+                .claim("Role", "USER")
                 //.claim("Departmen", "CS")
                 //.claim("rnd-clm", new Random().nextInt(20) + 1)
                 .setIssuedAt(Date.from(Instant.now()))
@@ -96,13 +97,18 @@ public class JwtProvider {
     }
 
     public Authentication getAuthentication(String token) {
+
+        // TODO hatalı
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(jwtSecret)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
 
-        return new UsernamePasswordAuthenticationToken(claims.getSubject(), token);
+        // UserImplService.loadUserByUsername ile authentication nasıl getirebilirim ?
+        String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        return new UsernamePasswordAuthenticationToken(principal, token);
     }
 
     public boolean decodeJwt(String jwt) {
