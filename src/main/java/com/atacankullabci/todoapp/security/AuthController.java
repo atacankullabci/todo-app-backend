@@ -47,7 +47,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO) throws CustomException {
-        AuthenticationResponseDTO authenticationResponseDTO = null;
+        AuthenticationResponseDTO authenticationResponseDTO;
         try {
             authenticationResponseDTO = authService.loginUser(loginRequestDTO);
         } catch (DisabledException e) {
@@ -57,9 +57,9 @@ public class AuthController {
         return ResponseEntity.ok().body(authenticationResponseDTO);
     }
 
-    @PostMapping("/logout")
+    /*@PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody LoginRequestDTO loginRequestDTO) {
         authService.logout(loginRequestDTO);
         return ResponseEntity.ok().build();
-    }
+    }*/
 }

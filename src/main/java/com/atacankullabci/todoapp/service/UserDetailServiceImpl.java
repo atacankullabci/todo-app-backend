@@ -1,15 +1,16 @@
 package com.atacankullabci.todoapp.service;
 
 import com.atacankullabci.todoapp.common.User;
+import com.atacankullabci.todoapp.exceptions.UserNotActivatedException;
 import com.atacankullabci.todoapp.repository.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
-import java.util.Optional;
 
 @Service
 public class UserDetailServiceImpl implements UserDetailsService {
@@ -24,13 +25,17 @@ public class UserDetailServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) {
-        Optional<User> user = userRepository.findByUserName(username);
+        return userRepository.findByUserName(username)
+                .map(loginUser -> createSpringSecurityUser(username, loginUser))
+                .orElseThrow(() -> new UsernameNotFoundException("User " + username + " was not found in the database"));
+    }
 
-        // users 'enabled' property should be true when authorizing the user. otherwise spring throws exception
-        return new org.springframework.security.core.userdetails.User(user.get().getUserName(),
-                user.get().getPassword(),
-                user.get().getEnabled(),
-                true, true, true,
+    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
+        if (!user.getEnabled()) {
+            throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
+        }
+        return new org.springframework.security.core.userdetails.User(user.getUserName(),
+                user.getPassword(),
                 Collections.singleton(new SimpleGrantedAuthority("USER")));
     }
 }
