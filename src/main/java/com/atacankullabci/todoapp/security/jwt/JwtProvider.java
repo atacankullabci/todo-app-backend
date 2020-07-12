@@ -8,12 +8,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 
@@ -21,11 +18,7 @@ import javax.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 @Service
 public class JwtProvider {
@@ -34,13 +27,18 @@ public class JwtProvider {
 
     private Key key;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final Long expirationTimeInMillis = 300000L; // 5 min
+
+    private final UserRepository userRepository;
 
     // generate keystore : keytool -genkey -v -keystore todo.jks -alias com.atacankullabci.todo -keyalg RSA -keysize 2048
 
     @Value("${jwt.signature}")
     private String jwtSecret;
+
+    public JwtProvider(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @PostConstruct
     public void init() {
@@ -54,22 +52,31 @@ public class JwtProvider {
     }
 
     public String generateToken(Authentication authentication) {
-        String authorities = authentication.getAuthorities().stream()
+        /*String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(","));*/
 
         User principal = (User) authentication.getPrincipal();
 
-        Instant expireIn = Instant.now().plus(5, ChronoUnit.MINUTES); // Expire in 5 min
-
         String jwt = Jwts.builder()
                 .setSubject(principal.getUsername())
-                .claim("auth", authorities)
+                ///.claim("auth", authorities)
                 .setIssuedAt(Date.from(Instant.now()))
-                .setExpiration(Date.from(expireIn))
+                .setExpiration(Date.from(Instant.now().plusMillis(expirationTimeInMillis)))
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
         return jwt;
+    }
+
+    public String generateTokenWithUsername(String username) {
+        return Jwts.builder()
+                .setSubject(username)
+                // TODO : Find a way to feed auth data claims from the revoked token
+                //.claim("auth", "")
+                .setIssuedAt(Date.from(Instant.now()))
+                .setExpiration(Date.from(Instant.now().plusMillis(expirationTimeInMillis)))
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
     }
 
     public Authentication getAuthentication(String token) {
@@ -82,27 +89,13 @@ public class JwtProvider {
 
         com.atacankullabci.todoapp.common.User userDetails = this.userRepository.findByUserName(claims.getSubject()).get();
 
-        Collection<? extends GrantedAuthority> authorities =
+        /*Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get("auth").toString().split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
+         return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);*/
 
-        return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
-
-        /*Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get("auth").toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
-
-        User principal = new User(claims.getSubject(), "", authorities);
-
-        return new UsernamePasswordAuthenticationToken(principal, token);*/
+        return new UsernamePasswordAuthenticationToken(userDetails, "", null);
     }
 
     public boolean decodeJwt(String jwt) {
@@ -114,6 +107,10 @@ public class JwtProvider {
             log.trace("Invalid JWT token trace.", e);
         }
         return false;
+    }
+
+    public long getExpirationTimeInMillis() {
+        return this.expirationTimeInMillis;
     }
 }
 

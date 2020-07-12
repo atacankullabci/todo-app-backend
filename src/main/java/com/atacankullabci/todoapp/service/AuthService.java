@@ -5,6 +5,7 @@ import com.atacankullabci.todoapp.common.User;
 import com.atacankullabci.todoapp.common.VerificationToken;
 import com.atacankullabci.todoapp.dto.AuthenticationResponseDTO;
 import com.atacankullabci.todoapp.dto.LoginRequestDTO;
+import com.atacankullabci.todoapp.dto.RefreshTokenRequestDTO;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.repository.UserRepository;
@@ -33,18 +34,20 @@ public class AuthService {
     private final MailService mailService;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthService(PasswordEncoder passwordEncoder,
                        UserRepository userRepository,
                        VerificationTokenRepository verificationTokenRepository,
                        MailService mailService,
-                       AuthenticationManagerBuilder authenticationManagerBuilder, JwtProvider jwtProvider) {
+                       AuthenticationManagerBuilder authenticationManagerBuilder, JwtProvider jwtProvider, RefreshTokenService refreshTokenService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.mailService = mailService;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.jwtProvider = jwtProvider;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Transactional
@@ -96,19 +99,6 @@ public class AuthService {
     }
 
     public AuthenticationResponseDTO loginUser(LoginRequestDTO loginRequestDTO) {
-
-        /*UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
-
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        boolean rememberMe = (loginVM.isRememberMe() == null) ? false : loginVM.isRememberMe();
-        String jwt = tokenProvider.createToken(authentication, rememberMe);
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, "Bearer " + jwt);
-        return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);*/
-
-
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginRequestDTO.getUsername(), loginRequestDTO.getPassword());
 
@@ -117,7 +107,26 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = jwtProvider.generateToken(authentication);
-        return new AuthenticationResponseDTO(jwt, loginRequestDTO.getUsername());
+        return new AuthenticationResponseDTO(jwt,
+                refreshTokenService.generateRefreshToken().getToken(),
+                Instant.now().plusMillis(jwtProvider.getExpirationTimeInMillis()),
+                loginRequestDTO.getUsername());
+    }
+
+    public AuthenticationResponseDTO refreshToken(RefreshTokenRequestDTO refreshTokenRequestDTO) {
+        refreshTokenService.validateRefreshToken(refreshTokenRequestDTO.getRefreshToken());
+        String token = jwtProvider.generateTokenWithUsername(refreshTokenRequestDTO.getUsername());
+
+        return new AuthenticationResponseDTO(
+                token,
+                refreshTokenRequestDTO.getRefreshToken(),
+                Instant.now().plusMillis(jwtProvider.getExpirationTimeInMillis()),
+                refreshTokenRequestDTO.getUsername()
+        );
+    }
+
+    public void logoutUser(RefreshTokenRequestDTO refreshTokenRequestDTO) {
+        refreshTokenService.deleteRefreshToken(refreshTokenRequestDTO.getRefreshToken());
     }
 
     //public void logout(LoginRequestDTO loginRequestDTO) {

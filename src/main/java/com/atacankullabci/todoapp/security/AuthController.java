@@ -2,25 +2,25 @@ package com.atacankullabci.todoapp.security;
 
 import com.atacankullabci.todoapp.dto.AuthenticationResponseDTO;
 import com.atacankullabci.todoapp.dto.LoginRequestDTO;
+import com.atacankullabci.todoapp.dto.RefreshTokenRequestDTO;
 import com.atacankullabci.todoapp.dto.UserLoginDTO;
 import com.atacankullabci.todoapp.exceptions.CustomException;
 import com.atacankullabci.todoapp.service.AuthService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin("http://localhost:4200")
 public class AuthController {
 
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
-
     private final AuthService authService;
 
-    public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder, AuthService authService) {
-        this.authenticationManagerBuilder = authenticationManagerBuilder;
+    public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
@@ -54,12 +54,19 @@ public class AuthController {
             throw new CustomException("The user have not been activated");
         }
 
-        return ResponseEntity.ok().body(authenticationResponseDTO);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Authorization", authenticationResponseDTO.getAuthenticationToken());
+        return ResponseEntity.ok().headers(httpHeaders).body(authenticationResponseDTO);
     }
 
-    /*@PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestBody LoginRequestDTO loginRequestDTO) {
-        authService.logout(loginRequestDTO);
+    @PostMapping("/refresh/token")
+    public ResponseEntity<AuthenticationResponseDTO> refreshToken(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
+        return ResponseEntity.ok().body(authService.refreshToken(refreshTokenRequestDTO));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequestDTO) {
+        authService.logoutUser(refreshTokenRequestDTO);
         return ResponseEntity.ok().build();
-    }*/
+    }
 }

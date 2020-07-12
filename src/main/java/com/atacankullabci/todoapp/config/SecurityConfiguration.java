@@ -40,23 +40,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         return super.authenticationManager();
     }
 
-    /*@Override
-    protected void configure(HttpSecurity http) throws Exception {
-        // All request which are starting with /api/auth are going to pass to backend
-        // The remaining end points are need to be authenticated
-        http.cors().and().csrf().disable()
-                .authorizeRequests()
-                .antMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated()
-                .and().httpBasic();
-    }*/
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        //@formatter:off
         http
-                .httpBasic().disable()
-                .csrf().disable()
+                .httpBasic()
+                .disable()
+                .csrf()
+                .disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
@@ -65,7 +55,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and().httpBasic()
                 .and()
                 .apply(getCustomJwtConfigurer());
-        //@formatter:on
     }
 
     @Autowired
