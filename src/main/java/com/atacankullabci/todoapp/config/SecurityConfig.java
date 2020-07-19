@@ -19,12 +19,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserDetailsService userDetailsService;
     private final JwtProvider jwtProvider;
 
-    public SecurityConfiguration(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService, JwtProvider jwtProvider) {
+    public SecurityConfig(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService, JwtProvider jwtProvider) {
         this.userDetailsService = userDetailsService;
         this.jwtProvider = jwtProvider;
     }
