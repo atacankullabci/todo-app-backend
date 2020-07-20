@@ -16,6 +16,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
 
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
@@ -23,10 +25,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserDetailsService userDetailsService;
     private final JwtProvider jwtProvider;
+    private final CorsFilter corsFilter;
 
-    public SecurityConfig(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService, JwtProvider jwtProvider) {
+    public SecurityConfig(@Qualifier("userDetailServiceImpl") UserDetailsService userDetailsService, JwtProvider jwtProvider, CorsFilter corsFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtProvider = jwtProvider;
+        this.corsFilter = corsFilter;
     }
 
     @Bean
@@ -47,6 +51,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .disable()
                 .csrf()
                 .disable()
+                .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
