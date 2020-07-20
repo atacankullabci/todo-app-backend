@@ -15,7 +15,6 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin("http://localhost:4200")
 public class AuthController {
 
     private final AuthService authService;

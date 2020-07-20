@@ -12,10 +12,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin("http://localhost:4200")
 public class TodoController {
     private final TodoRepository todoRepository;
-    private static final String ENTITY_NAME = "todo";
     private final TodoService todoService;
 
     public TodoController(TodoRepository todoRepository, TodoService todoService) {

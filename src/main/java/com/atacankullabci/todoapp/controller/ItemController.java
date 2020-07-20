@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin("http://localhost:4200")
 public class ItemController {
 
     private final ItemRepository itemRepository;
