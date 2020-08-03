@@ -14,6 +14,7 @@ public class UserLoginDTO {
     @Size(min = 4, max = 100)
     private String password;
 
+    @NotNull
     @Email
     private String email;
 
