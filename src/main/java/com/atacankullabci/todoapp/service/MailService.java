@@ -1,42 +1,54 @@
 package com.atacankullabci.todoapp.service;
 
 import com.atacankullabci.todoapp.common.NotificationMail;
-import com.atacankullabci.todoapp.exceptions.CustomException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 @Service
 public class MailService {
 
     private final Logger log = LoggerFactory.getLogger(MailService.class);
 
-    private final JavaMailSender javaMailSender;
+    private final JavaMailSenderImpl javaMailSenderImpl;
 
-    public MailService(@Qualifier("configMailSender") JavaMailSender javaMailSender) {
-        this.javaMailSender = javaMailSender;
+    public MailService(@Qualifier("configMailSender") JavaMailSenderImpl javaMailSenderImpl) {
+        this.javaMailSenderImpl = javaMailSenderImpl;
     }
 
     @Async
     public void sendActivationMail(NotificationMail notificationMail) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(((JavaMailSenderImpl) javaMailSender).getUsername());
-        message.setTo(notificationMail.getRecipient());
-        message.setSubject(notificationMail.getSubject());
-        message.setText(notificationMail.getBody());
+        Session session = Session.getInstance(javaMailSenderImpl.getJavaMailProperties(),
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(javaMailSenderImpl.getUsername(), javaMailSenderImpl.getPassword());
+                    }
+                });
 
-        // Go to the sender gmail account -> security tab -> enable less secure app access
         try {
-            javaMailSender.send(message);
-            log.info("Activation mail send to user {}", notificationMail.getRecipient());
-        } catch (MailException err) {
-            new CustomException("An error occurred while sending the email.");
+            Message message = new MimeMessage(session);
+
+            message.setFrom(new InternetAddress("atacan235@gmail.com"));
+
+            message.setRecipients(Message.RecipientType.TO,
+                    InternetAddress.parse(notificationMail.getRecipient()));
+
+            message.setSubject(notificationMail.getSubject());
+
+            message.setContent(notificationMail.getBody(), "text/html");
+
+            Transport.send(message);
+
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

@@ -64,10 +64,13 @@ public class AuthService {
 
         String token = getGenerateVerificationToken(user);
 
+        String body = "<!DOCTYPE html>" +
+                "<html style=\"text-align: center\"><head><h1>Thank you for signing up to Quick-Do App, please click on the link below to activate your account</h1>" +
+                "</head><body><a href=\"http:localhost:8080/api/auth/account-verification/" + token + "\">Verify Your Account</a> </body></html>";
+
         NotificationMail notificationMail = new NotificationMail("Please Activate Your Account",
                 user.getEmail(),
-                "Thank you for signing up to Quick-Do, please click on the link below to activate your account" +
-                        "\nhttp:localhost:8080/api/auth/account-verification/" + token);
+                body);
 
         mailService.sendActivationMail(notificationMail);
     }
