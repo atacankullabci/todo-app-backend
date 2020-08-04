@@ -31,7 +31,7 @@ public class AuthController {
         } else {
             throw new CustomException("Bad request");
         }
-        return ResponseEntity.ok("User has been registered");
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/account-verification/{activationToken}")
