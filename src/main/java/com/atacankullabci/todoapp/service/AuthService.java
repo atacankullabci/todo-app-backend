@@ -60,6 +60,10 @@ public class AuthService {
         user.setEmail(userLoginDTO.getEmail());
         user.setTodoList(new ArrayList<>());
 
+        if (userRepository.findByUserNameAndAndEmail(user.getUserName(), user.getEmail()).isPresent()) {
+            throw new CustomException("User exists !");
+        }
+
         userRepository.save(user);
 
         String token = getGenerateVerificationToken(user);
