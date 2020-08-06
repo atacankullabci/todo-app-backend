@@ -52,6 +52,10 @@ public class AuthService {
 
     @Transactional
     public void signupUser(UserLoginDTO userLoginDTO) {
+        if (this.userRepository.findByEmail(userLoginDTO.getEmail()).isPresent()) {
+            throw new CustomException("Existing user");
+        }
+
         User user = new User();
         user.setUserName(userLoginDTO.getUsername());
         user.setFirstName(userLoginDTO.getFirstName());
@@ -60,7 +64,7 @@ public class AuthService {
         user.setEmail(userLoginDTO.getEmail());
         user.setTodoList(new ArrayList<>());
 
-        if (userRepository.findByUserNameAndAndEmail(user.getUserName(), user.getEmail()).isPresent()) {
+        if (userRepository.findByUserNameAndEmail(user.getUserName(), user.getEmail()).isPresent()) {
             throw new CustomException("User exists !");
         }
 
