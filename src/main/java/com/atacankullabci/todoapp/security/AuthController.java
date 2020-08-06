@@ -25,7 +25,6 @@ public class AuthController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<String> signUp(@Valid @RequestBody UserLoginDTO userLoginDTO) throws CustomException {
-        // compare new coming obj to db to check whether the same obj is trying to add twice
         if (userLoginDTO != null) {
             authService.signupUser(userLoginDTO);
         } else {
