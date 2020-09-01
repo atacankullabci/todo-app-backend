@@ -52,7 +52,8 @@ public class AuthService {
 
     @Transactional
     public void signupUser(UserLoginDTO userLoginDTO) {
-        if (this.userRepository.findByEmail(userLoginDTO.getEmail()).isPresent()) {
+        if (this.userRepository.findByEmail(userLoginDTO.getEmail()).isPresent()
+                || this.userRepository.findByUserName(userLoginDTO.getUsername()).isPresent()) {
             throw new CustomException("Existing user");
         }
 
@@ -63,10 +64,6 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(userLoginDTO.getPassword()));
         user.setEmail(userLoginDTO.getEmail());
         user.setTodoList(new ArrayList<>());
-
-        if (userRepository.findByUserNameAndEmail(user.getUserName(), user.getEmail()).isPresent()) {
-            throw new CustomException("User exists !");
-        }
 
         userRepository.save(user);
 
@@ -85,8 +82,13 @@ public class AuthService {
 
     @Transactional
     public void activateUser(String activationToken) throws CustomException {
-        // control the token whether it is expired or not
+        // control the token whether it's expired or invalid
         Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(activationToken);
+
+        if (!verificationToken.isPresent()) {
+            throw new CustomException("Invalid token");
+        }
+
         if (Instant.now().plus(1, ChronoUnit.DAYS).compareTo(verificationToken.get().getExpirationDate()) < 0) {
             throw new CustomException("Invalid token");
         }
@@ -95,6 +97,8 @@ public class AuthService {
         activationUser.setEnabled(true);
 
         userRepository.save(activationUser);
+
+        verificationTokenRepository.deleteById(verificationToken.get().getId());
     }
 
     public String getGenerateVerificationToken(User user) {
@@ -102,7 +106,7 @@ public class AuthService {
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(token);
         verificationToken.setUser(user);
-        verificationToken.setExpirationDate(Instant.now().plus(1, ChronoUnit.DAYS));
+        verificationToken.setExpirationDate(Instant.now().plus(1, ChronoUnit.MINUTES));
 
         verificationTokenRepository.save(verificationToken);
 

@@ -36,9 +36,11 @@ public class AuthController {
     @GetMapping("/account-verification/{activationToken}")
     public ResponseEntity<String> activateUser(@PathVariable(name = "activationToken") String activationToken) throws CustomException {
         if (activationToken != null) {
-            authService.activateUser(activationToken);
-        } else {
-            throw new CustomException("Your activation token is either revoked or incorrect");
+            try {
+                authService.activateUser(activationToken);
+            } catch (CustomException exception) {
+                return ResponseEntity.badRequest().body("Your activation token is either revoked or incorrect");
+            }
         }
         return ResponseEntity.ok("Account has been activated");
     }
@@ -49,7 +51,7 @@ public class AuthController {
         try {
             authenticationResponseDTO = authService.loginUser(loginRequestDTO);
         } catch (DisabledException e) {
-            throw new CustomException("The user have not been activated");
+            throw new CustomException("The user has not been activated");
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
